@@ -1006,6 +1006,7 @@ class tx_realurl extends tx_realurl_baseclass {
 				}
 
 				// Re-create QUERY_STRING from Get vars for use with typoLink()
+				$cachedInfo['GET_VARS']['id'] = $cachedInfo['id'];
 				$_SERVER['QUERY_STRING'] = $this->decodeSpURL_createQueryString($cachedInfo['GET_VARS']);
 
 				// Jump-admin if configured
@@ -1183,7 +1184,9 @@ class tx_realurl extends tx_realurl_baseclass {
 
 		// cHash handling
 		if ($cHashCache) {
-			$queryString = $this->apiWrapper->implodeArrayForUrl('', $cachedInfo['GET_VARS']);
+			$getVars = $cachedInfo['GET_VARS'];
+			$getVars['id'] = $cachedInfo['id'];
+			$queryString = $this->apiWrapper->implodeArrayForUrl('', $getVars);
 			$containsRelevantParametersForCHashCreation = count($this->apiWrapper->getRelevantChashParameters($queryString)) > 0;
 
 			if ($containsRelevantParametersForCHashCreation) {
