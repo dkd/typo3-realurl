@@ -430,7 +430,7 @@ class tx_realurl extends tx_realurl_baseclass {
 		}
 
 		// Process cHash
-		$this->encodeSpURL_cHashProcessing($newUrl, $paramKeyValues);
+		$this->encodeSpURL_cHashProcessing($newUrl, $paramKeyValues, $page_id);
 
 		// Manage remaining GET parameters
 		if (count($paramKeyValues)) {
@@ -800,10 +800,11 @@ class tx_realurl extends tx_realurl_baseclass {
 	 *
 	 * @param string $newUrl URL path (being hashed to an integer and cHash value related to this.)
 	 * @param array $paramKeyValues Params $array array, passed by reference. If "cHash" is the only value left it will be put in the cache table and the value is unset in the array.
+	 * @param int $page_id Page id of the page to link to (needed for cache hash calculation)
 	 * @return void
 	 * @see decodeSpURL_cHashCache()
 	 */
-	protected function encodeSpURL_cHashProcessing($newUrl, &$paramKeyValues) {
+	protected function encodeSpURL_cHashProcessing($newUrl, &$paramKeyValues, $page_id) {
 
 		// If "cHash" is the ONLY parameter left...
 		// (if there are others our problem is that the cHash probably covers those
@@ -814,6 +815,7 @@ class tx_realurl extends tx_realurl_baseclass {
 			if ($this->rebuildCHash) {
 				$cHashParameters = array_merge($this->cHashParameters, $paramKeyValues);
 				unset($cHashParameters['cHash']);
+				$cHashParameters['id'] = $page_id;
 
 				$cHashParameters = $this->apiWrapper->getRelevantChashParameters($this->apiWrapper->implodeArrayForUrl('', $cHashParameters));
 
@@ -1006,6 +1008,7 @@ class tx_realurl extends tx_realurl_baseclass {
 				}
 
 				// Re-create QUERY_STRING from Get vars for use with typoLink()
+				$cachedInfo['GET_VARS']['id'] = $cachedInfo['id'];
 				$_SERVER['QUERY_STRING'] = $this->decodeSpURL_createQueryString($cachedInfo['GET_VARS']);
 
 				// Jump-admin if configured
@@ -1183,7 +1186,9 @@ class tx_realurl extends tx_realurl_baseclass {
 
 		// cHash handling
 		if ($cHashCache) {
-			$queryString = $this->apiWrapper->implodeArrayForUrl('', $cachedInfo['GET_VARS']);
+			$getVars = $cachedInfo['GET_VARS'];
+			$getVars['id'] = $cachedInfo['id'];
+			$queryString = $this->apiWrapper->implodeArrayForUrl('', $getVars);
 			$containsRelevantParametersForCHashCreation = count($this->apiWrapper->getRelevantChashParameters($queryString)) > 0;
 
 			if ($containsRelevantParametersForCHashCreation) {
